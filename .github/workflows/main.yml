@@ -3,8 +3,7 @@ name: Gerar APK Copiloto JM
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   build:
@@ -18,16 +17,30 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: '17'
+
+      - name: Configurar Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Instalar SDK Android
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Extrair projeto
+        run: |
+          unzip -q Copiloto_JM_v0_3_OCR_corrigido.zip -d projeto
 
       - name: Configurar Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
 
       - name: Compilar APK
-        run: gradle assembleDebug
+        run: |
+          cd projeto/copiloto_jm
+          gradle assembleDebug
 
       - name: Salvar APK
         uses: actions/upload-artifact@v4
         with:
           name: Copiloto-JM-APK
-          path: app/build/outputs/apk/debug/*.apk
+          path: projeto/copiloto_jm/app/build/outputs/apk/debug/app-debug.apk
