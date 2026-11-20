@@ -21,7 +21,6 @@ jobs:
 
       - name: Preparar Android SDK
         run: |
-          echo "ANDROID_HOME=$ANDROID_HOME"
           echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
           echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
 
@@ -40,15 +39,61 @@ jobs:
           echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
           echo "Projeto encontrado: $PROJECT_DIR"
 
-      - name: Configurar AndroidX
+      - name: Configurar Java e Kotlin para JVM 1.8
         run: |
           cd "$PROJECT_DIR"
+
+          cat > app/build.gradle <<'GRADLE'
+          plugins {
+              id 'com.android.application'
+              id 'org.jetbrains.kotlin.android'
+          }
+
+          android {
+              namespace 'com.copilotojm.app'
+              compileSdk 35
+
+              compileOptions {
+                  sourceCompatibility JavaVersion.VERSION_1_8
+                  targetCompatibility JavaVersion.VERSION_1_8
+              }
+
+              kotlinOptions {
+                  jvmTarget = '1.8'
+              }
+
+              defaultConfig {
+                  applicationId 'com.copilotojm.app'
+                  minSdk 26
+                  targetSdk 35
+                  versionCode 1
+                  versionName '0.1.0'
+              }
+          }
+
+          dependencies {
+              implementation 'com.google.mlkit:text-recognition:16.0.1'
+              implementation 'androidx.core:core:1.15.0'
+          }
+
+          tasks.withType(JavaCompile).configureEach {
+              sourceCompatibility = '1.8'
+              targetCompatibility = '1.8'
+          }
+          GRADLE
+
           printf '%s\n' \
             'android.useAndroidX=true' \
             'android.enableJetifier=true' \
             'org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8' \
+            'kotlin.jvm.target.validation.mode=error' \
             > gradle.properties
-          cat gradle.properties
+
+          echo "=== CONFIGURAÇÃO JAVA ==="
+          grep -n "sourceCompatibility\|targetCompatibility" app/build.gradle
+
+          echo "=== CONFIGURAÇÃO KOTLIN ==="
+          grep -n "jvmTarget" app/build.gradle
 
       - name: Configurar Gradle
         uses: gradle/actions/setup-gradle@v4
