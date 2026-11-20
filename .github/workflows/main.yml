@@ -21,13 +21,15 @@ jobs:
 
       - name: Configurar Android SDK
         uses: android-actions/setup-android@v3
-
-      - name: Instalar SDK Android
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+        with:
+          packages: |
+            platforms;android-35
+            build-tools;35.0.0
 
       - name: Extrair projeto
         run: |
-          unzip -q Copiloto_JM_v0_3_OCR_corrigido.zip -d projeto
+          unzip -q Copiloto_JM_v0_3_OCR_corrigido.zip
+          mkdir -p projeto/copiloto_jm
 
       - name: Configurar Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -43,4 +45,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Copiloto-JM-APK
-          path: projeto/copiloto_jm/app/build/outputs/apk/debug/app-debug.apk
+          path: projeto/copiloto_jm/app/build/outputs/apk/debug/*.apk
