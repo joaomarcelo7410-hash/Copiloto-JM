@@ -36,7 +36,19 @@ jobs:
 
       - name: Localizar projeto
         run: |
-          find projeto -type f \( -name "settings.gradle" -o -name "settings.gradle.kts" \)
+          PROJECT_DIR=$(find projeto -type f \( -name "settings.gradle" -o -name "settings.gradle.kts" \) | head -n 1 | xargs dirname)
+          echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
+          echo "Projeto encontrado: $PROJECT_DIR"
+
+      - name: Configurar AndroidX
+        run: |
+          cd "$PROJECT_DIR"
+          printf '%s\n' \
+            'android.useAndroidX=true' \
+            'android.enableJetifier=true' \
+            'org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8' \
+            > gradle.properties
+          cat gradle.properties
 
       - name: Configurar Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -45,8 +57,6 @@ jobs:
 
       - name: Compilar APK
         run: |
-          PROJECT_DIR=$(find projeto -type f \( -name "settings.gradle" -o -name "settings.gradle.kts" \) | head -n 1 | xargs dirname)
-          echo "Projeto encontrado: $PROJECT_DIR"
           cd "$PROJECT_DIR"
           gradle assembleDebug
 
