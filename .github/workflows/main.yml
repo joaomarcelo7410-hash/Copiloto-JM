@@ -1,4 +1,3 @@
-
 name: Gerar APK Copiloto JM
 
 on:
@@ -20,20 +19,24 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: Configurar Android SDK
-        uses: android-actions/setup-android@v3
+      - name: Preparar Android SDK
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          echo "$ANDROID_HOME/cmdline-tools/latest/bin" >> $GITHUB_PATH
+          echo "$ANDROID_HOME/platform-tools" >> $GITHUB_PATH
 
       - name: Instalar componentes Android
         run: |
+          yes | sdkmanager --licenses || true
           sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
       - name: Extrair projeto
         run: |
           unzip -q Copiloto_JM_v0_3_OCR_corrigido.zip -d projeto
 
-      - name: Encontrar projeto Android
+      - name: Localizar projeto
         run: |
-          find projeto -name settings.gradle -o -name settings.gradle.kts
+          find projeto -type f \( -name "settings.gradle" -o -name "settings.gradle.kts" \)
 
       - name: Configurar Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -42,8 +45,8 @@ jobs:
 
       - name: Compilar APK
         run: |
-          PROJECT_DIR=$(find projeto -name settings.gradle -o -name settings.gradle.kts | head -n 1 | xargs dirname)
-          echo "Projeto encontrado em: $PROJECT_DIR"
+          PROJECT_DIR=$(find projeto -type f \( -name "settings.gradle" -o -name "settings.gradle.kts" \) | head -n 1 | xargs dirname)
+          echo "Projeto encontrado: $PROJECT_DIR"
           cd "$PROJECT_DIR"
           gradle assembleDebug
 
@@ -53,4 +56,3 @@ jobs:
           name: Copiloto-JM-APK
           path: projeto/**/build/outputs/apk/debug/*.apk
           if-no-files-found: error
-          
