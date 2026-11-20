@@ -1,3 +1,4 @@
+
 name: Gerar APK Copiloto JM
 
 on:
@@ -21,15 +22,18 @@ jobs:
 
       - name: Configurar Android SDK
         uses: android-actions/setup-android@v3
-        with:
-          packages: |
-            platforms;android-35
-            build-tools;35.0.0
+
+      - name: Instalar componentes Android
+        run: |
+          sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
       - name: Extrair projeto
         run: |
-          unzip -q Copiloto_JM_v0_3_OCR_corrigido.zip
-          mkdir -p projeto/copiloto_jm
+          unzip -q Copiloto_JM_v0_3_OCR_corrigido.zip -d projeto
+
+      - name: Encontrar projeto Android
+        run: |
+          find projeto -name settings.gradle -o -name settings.gradle.kts
 
       - name: Configurar Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -38,11 +42,15 @@ jobs:
 
       - name: Compilar APK
         run: |
-          cd projeto/copiloto_jm
+          PROJECT_DIR=$(find projeto -name settings.gradle -o -name settings.gradle.kts | head -n 1 | xargs dirname)
+          echo "Projeto encontrado em: $PROJECT_DIR"
+          cd "$PROJECT_DIR"
           gradle assembleDebug
 
       - name: Salvar APK
         uses: actions/upload-artifact@v4
         with:
           name: Copiloto-JM-APK
-          path: projeto/copiloto_jm/app/build/outputs/apk/debug/*.apk
+          path: projeto/**/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+          
